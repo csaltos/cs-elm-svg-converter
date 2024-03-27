@@ -18,7 +18,7 @@ mvn package
 
 ```bash
 cd cs-elm-svg-converter
-java -cp target/cs-elm-svg-converter-*.jar < file.svg
+./convert.sh file.svg
 ```
 
 ## Authors
