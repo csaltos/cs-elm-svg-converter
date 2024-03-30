@@ -29,15 +29,24 @@ public class CsElmSvgConverter extends DefaultHandler {
     }
 
     @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+      char[] textChars = Arrays.copyOfRange(ch, start, start + length);
+      String text = String.valueOf(textChars);
+      if (!text.trim().isEmpty()) {
+        System.out.print(" text \"" + text.trim() + "\" ");
+      }
+    }
+
+    @Override
     public void startElement(String namespaceURI,
             String localName,
             String qName,
-            Attributes atts)
+            Attributes attrs)
             throws SAXException {
-
+      
         this.printIndent(this._isFirstElement);
 
-        System.out.print(this.fromSvgElementToElm(localName));
+        System.out.print(this.fromSvgElementToElm(qName, localName));
         System.out.print(" [");
 
         // NOTE: inside a new element/node, we start with no child nodes.
@@ -45,13 +54,15 @@ public class CsElmSvgConverter extends DefaultHandler {
         this._indentLevel++;
 
         boolean isFirstAttr = true;
-        for (int i = 0; i < atts.getLength(); i++) {
+        for (int i = 0; i < attrs.getLength(); i++) {
 
-            String attrName = atts.getLocalName(i);
-            String attrValue = atts.getValue(i);
+            String attrLocalName = attrs.getLocalName(i);
+            String attrQName = attrs.getQName(i);
+            String attrValue = attrs.getValue(i);
+
 
             this.printIndent(isFirstAttr);
-            System.out.print(this.fromSvgAttrToElm(attrName));
+            System.out.print(this.fromSvgAttrToElm(attrQName, attrLocalName));
             System.out.print(" \"");
             System.out.print(attrValue.toString());
             System.out.print("\"");
@@ -88,22 +99,33 @@ public class CsElmSvgConverter extends DefaultHandler {
         ma.put("text", "text");
         ma.put("width", "Svg.Attributes.width");
         ma.put("fill", "Svg.Attributes.fill");
+        ma.put("xml:space", "Svg.Attributes.xmlSpace");
         _fromSvgAttributeToElm = ma;
     }
 
-    public String fromSvgElementToElm(String svgName) {
+    public String fromSvgElementToElm(String svgQName, String svgLocalName) {
+        String svgName = getSvgName(svgQName, svgLocalName);
         String r = _fromSvgElementToElm.get(svgName);
         if (r == null) {
-            return svgName;
+            return svgLocalName;
         } else {
             return r;
         }
     }
 
-    public String fromSvgAttrToElm(String svgName) {
-        String r = _fromSvgAttributeToElm.get(svgName);
+    public String getSvgName(String svgQName, String svgLocalName) {
+      if (svgQName.contains(":")) {
+        return svgQName;
+      } else {
+        return svgLocalName;
+      }
+    }
+
+    public String fromSvgAttrToElm(String svgQName, String svgLocalName) {
+      String svgName = getSvgName(svgQName, svgLocalName);
+      String r = _fromSvgAttributeToElm.get(svgName);
         if (r == null) {
-            return svgName;
+            return svgLocalName;
         } else {
             return r;
         }
